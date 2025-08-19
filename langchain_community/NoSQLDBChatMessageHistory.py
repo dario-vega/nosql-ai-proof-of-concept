@@ -34,14 +34,15 @@ class NoSQLDBChatMessageHistory(BaseChatMessageHistory):
         wu: Optional[str] = 10,
         storage: Optional[str] = 1,
     ):
+        print("Connecting to the Oracle NoSQL Cloud Service")
         self.region = region
         self.table = table_name
         self.compartment_id = compartment_id
         self.session_id = session_id
-        print("Connecting to the Oracle NoSQL Cloud Service")
         provider = SignatureProvider();
         config = NoSQLHandleConfig(self.region, provider).set_logger(None)
         config.set_default_compartment(self.compartment_id)
+        #if self.handle is None:
         self.handle = NoSQLHandle(config)
         # creating table if not exists
         statement = ('Create table if not exists {} (id STRING, items JSON, primary key(id))').format(self.table)
@@ -89,4 +90,3 @@ class NoSQLDBChatMessageHistory(BaseChatMessageHistory):
         """Clear session memory from NoSQLDB"""
         request = DeleteRequest().set_key({'id': self.session_id}).set_table_name(self.table)
         result = handle.delete(request)
-        print('After delete: ' + str(result))
