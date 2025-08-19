@@ -1,0 +1,6 @@
+oci
+borneo
+streamlit
+langchain_core
+langchain_community
+typing
