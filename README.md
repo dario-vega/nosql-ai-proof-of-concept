@@ -1,0 +1,1 @@
+# nosql-ai-proof-of-concept
