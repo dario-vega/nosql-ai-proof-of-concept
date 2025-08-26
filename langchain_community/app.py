@@ -1,5 +1,6 @@
 import streamlit as st
 import time
+import uuid
 from langchain_community.chat_models.oci_generative_ai import ChatOCIGenAI
 #from langchain_community.chat_message_histories import NoSQLDBChatMessageHistory
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
@@ -19,9 +20,10 @@ model = ChatOCIGenAI(
 ## Initialize the NoSQLDB chat message history
 from  NoSQLDBChatMessageHistory import NoSQLDBChatMessageHistory
 table_name = "SessionTable"
-session_id = "dario.vega@oracle.com"
+session_id = str(uuid.uuid4())
 compartment_id="ocid1.compartment.oc1..aaaaaaaa4mlehopmvdluv2wjcdp4tnh2ypjz3nhhpahb4ss7yvxaa3be3diq"
 history = NoSQLDBChatMessageHistory(table_name=table_name, session_id=session_id, compartment_id=compartment_id, region="us-ashburn-1")
+#history = NoSQLDBChatMessageHistory(table_name=table_name, session_id=session_id, compartment_id=compartment_id, region="us-ashburn-1",ttl=6)
 
 # Create the chat prompt template
 prompt_template = ChatPromptTemplate.from_messages(

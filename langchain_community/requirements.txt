@@ -1,6 +1,10 @@
-oci
+# python modules for NoSQLDBChatMessageHistory
 borneo
-streamlit
 langchain_core
-langchain_community
 typing
+
+# python modules for app.py
+oci
+langchain_community
+streamlit
+uuid
