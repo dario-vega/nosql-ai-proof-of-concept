@@ -3,6 +3,10 @@ import oci
 from oci.signer import Signer
 import os.path
 
+from borneo import (Regions, NoSQLHandle, NoSQLHandleConfig, QueryRequest, QueryIterableResult  )
+from borneo.iam import SignatureProvider
+import json
+
 
 mcp = FastMCP("OCI NoSQL MCP Server")
 
@@ -12,6 +16,11 @@ tenancy_id = os.getenv("TENANCY_ID_OVERRIDE", config['tenancy'])
 
 identity_client = oci.identity.IdentityClient(config)
 nosql_client = oci.nosql.NosqlClient(config)
+
+
+provider = SignatureProvider(profile_name=profile_name);
+configN = NoSQLHandleConfig(config['region'], provider).set_logger(None)
+handle = NoSQLHandle(configN)
 
 @mcp.tool()
 def list_all_compartments() -> str:
@@ -61,7 +70,44 @@ def execute_query(compartment_name: str, sql_script: str) -> str:
     compartment = get_compartment_by_name(compartment_name)
     if not compartment:
         return json.dumps({"error": f"Compartment '{compartment_name}' not found. Use list_compartment_names() to see available compartments."})
+    
+    request = QueryRequest().set_statement(sql_script).set_compartment(compartment.id)
+    #rows = []
+    #ru = 0
+    #wu = 0
+    #qiresult = handle.query_iterable(request)
+    #for row in qiresult:
+    #   rows.append(row)
+    #   ru += qiresult.get_read_units()
+    #   wu += qiresult.get_write_units()
+    #usageIt = {"read_units_consumed":qiresult.get_read_units(), "write_units_consumed":qiresult.get_write_units()} 
+    #usageIt2 = {"read_units_consumed":ru, "write_units_consumed":wu} 
 
+
+    rows = []
+    ru = 0
+    wu = 0
+    while True:
+        result = handle.query(request)
+        results = result.get_results()
+        ru += result.get_read_units()
+        wu += result.get_write_units()
+        for row in results:
+            rows.append(row)
+        if request.is_done():
+            break
+    usagePt = {"read_units_consumed":ru, "write_units_consumed":wu} 
+    
+    #return json.dumps({"items":rows, "usage":usageIt, "usage2":usageIt2})
+    return json.dumps({"items":rows, "usage":usagePt})
+
+@mcp.tool()
+def execute_query_internal(compartment_name: str, sql_script: str) -> str:
+    """execute a SQL query in a given compartment name"""
+    compartment = get_compartment_by_name(compartment_name)
+    if not compartment:
+        return json.dumps({"error": f"Compartment '{compartment_name}' not found. Use list_compartment_names() to see available compartments."})
+    
     query_response = nosql_client.query(
         query_details=oci.nosql.models.QueryDetails(
             compartment_id=compartment.id,
@@ -86,9 +132,6 @@ def execute_query(compartment_name: str, sql_script: str) -> str:
     #   page=query_response.next_page
     #   has_next_page=query_response.has_next_page
 
-@mcp.tool
-def greet(name: str) -> str:
-        return f"Hello, {name}!"
 
 if __name__ == "__main__":
    mcp.run()
