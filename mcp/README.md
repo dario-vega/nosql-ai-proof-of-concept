@@ -16,6 +16,7 @@ nosqltools-mcp-server.py is a FastMCP-based server that provides various tools f
 
 - **NoSQL Operations**
   - List  NoSQL Tables in specific compartments
+  - Describe  NoSQL Tables in specific compartments
   - Execute SQL queries specific compartments
 
 ## Prerequisites
@@ -23,6 +24,7 @@ nosqltools-mcp-server.py is a FastMCP-based server that provides various tools f
 - Python 3.x
 - fastmcp (installed automatically via requirements.txt)
 - OCI SDK (installed via requirements.txt)
+- NoSQL SDK - Borneo (installed via requirements.txt)
 - Valid OCI configuration file with credentials
 
 ## Installation
@@ -32,7 +34,7 @@ nosqltools-mcp-server.py is a FastMCP-based server that provides various tools f
    ```
    pip install -r requirements.txt
    ```
-   This will install `oci`, `requests`, `fastmcp`, and all other dependencies.
+   This will install `oci`, `requests`, `fastmcp`, `borneo` and all other dependencies.
 3. Set up your OCI config file at ~/.oci/config
 
 ## OCI Configuration
@@ -44,6 +46,7 @@ see the [OCI SDK documentation](https://docs.oracle.com/en-us/iaas/Content/API/C
 ## Required Python Packages
 
 - oci
+- borneo
 - requests
 - fastmcp
 
@@ -76,8 +79,8 @@ fastmcp run nosqltools-mcp-server.py:mcp
 
 You can use MCP inspector to explore the API Tools provided
 
-The MCP Inspector is an interactive developer tool for testing and debugging MCP servers. 
-https://modelcontextprotocol.io/legacy/tools/inspector
+The [MCP Inspector](https://modelcontextprotocol.io/legacy/tools/inspector)  is an interactive developer tool for testing and debugging MCP servers. 
+
 
 ## Security
 
@@ -95,6 +98,7 @@ see https://modelcontextprotocol.io/quickstart/user
 "List all tables in davega compartment"
 "Please let me view the first 20 lines in the table called sessiontable"
 "Can you provide me those data as a table"
+"Can you provide me those data in JSON format"
 "can you read the data in the table AgentInventoryEntity"
 "What about the data in test_ddb_complex"
 
