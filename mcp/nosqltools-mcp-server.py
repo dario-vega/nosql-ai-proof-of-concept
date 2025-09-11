@@ -1,46 +1,61 @@
-from fastmcp import FastMCP
-import oci
-from oci.signer import Signer
 import os.path
-
-from borneo import (Regions, NoSQLHandle, NoSQLHandleConfig, QueryRequest, QueryIterableResult  )
-from borneo.iam import SignatureProvider
 import json
 
+import oci
+from borneo import (Regions, NoSQLHandle, NoSQLHandleConfig, QueryRequest, QueryIterableResult  )
+from borneo.iam import SignatureProvider
 
-mcp = FastMCP("OCI NoSQL MCP Server")
+from fastmcp import FastMCP
+
 
 profile_name = os.getenv("PROFILE_NAME", "DEFAULT")
-config = oci.config.from_file(profile_name=profile_name)
-tenancy_id = os.getenv("TENANCY_ID_OVERRIDE", config['tenancy'])
 
+# OCI SDK
+config = oci.config.from_file(profile_name=profile_name)
+tenancy_id = config['tenancy']
 identity_client = oci.identity.IdentityClient(config)
 nosql_client = oci.nosql.NosqlClient(config)
-
-
+# NoSQL SDK - Borneo
 provider = SignatureProvider(profile_name=profile_name);
 configN = NoSQLHandleConfig(config['region'], provider).set_logger(None)
 handle = NoSQLHandle(configN)
 
-@mcp.tool()
+# MCP Code
+mcp = FastMCP("OCI NoSQL MCP Server - " + profile_name)
+
+
+def list_all_compartments_internal() -> str:
+    """Internal function to get List all compartments in a tenancy"""
+    response = identity_client.list_compartments(
+            compartment_id=tenancy_id,
+            compartment_id_in_subtree=True,
+            access_level="ACCESSIBLE",
+            lifecycle_state="ACTIVE",
+       )
+    compartments = response.data
+    compartments.append(identity_client.get_compartment(compartment_id=tenancy_id).data)
+    while response.has_next_page:
+        response = identity_client.list_compartments(
+            compartment_id=tenancy_id,
+            compartment_id_in_subtree=True,
+            access_level="ACCESSIBLE",
+            lifecycle_state="ACTIVE",
+            page=response.next_page
+        )
+        compartments.extend(response.data)
+    
+    return compartments
+
+# @mcp.tool()
 def list_all_compartments() -> str:
     """List all compartments in a tenancy with clear formatting"""
-    compartments = identity_client.list_compartments(tenancy_id).data
-    compartments.append(identity_client.get_compartment(compartment_id=tenancy_id).data)
-    return str(compartments)
+    return str(list_all_compartments_internal())
 
 def get_compartment_by_name(compartment_name: str):
     """Internal function to get compartment by name with caching"""
-    compartments = identity_client.list_compartments(
-        compartment_id=tenancy_id,
-        compartment_id_in_subtree=True,
-        access_level="ACCESSIBLE",
-        lifecycle_state="ACTIVE"
-    )
-    compartments.data.append(identity_client.get_compartment(compartment_id=tenancy_id).data)
- 
+    compartments = list_all_compartments_internal()
     # Search for the compartment by name
-    for compartment in compartments.data:
+    for compartment in compartments:
         if compartment.name.lower() == compartment_name.lower():
             return compartment
 
@@ -61,17 +76,27 @@ def list_nosql_tables(compartment_name: str) -> str:
     compartment = get_compartment_by_name(compartment_name)
     if not compartment:
         return json.dumps({"error": f"Compartment '{compartment_name}' not found. Use list_compartment_names() to see available compartments."})
-    nosql = nosql_client.list_tables(compartment_id=compartment.id).data
-    return str(nosql.items)
+    nosql_info = nosql_client.list_tables(compartment_id=compartment.id).data.items
+    return str(nosql_info)
+
+@mcp.tool()
+def describe_nosql_table(table_name: str, compartment_name: str) -> str:
+    """describe a NoSQL table in a given compartment name"""
+    compartment = get_compartment_by_name(compartment_name)
+    if not compartment:
+        return json.dumps({"error": f"Compartment '{compartment_name}' not found. Use list_compartment_names() to see available compartments."})
+    nosql_info = nosql_client.get_table(table_name_or_id=table_name, compartment_id=compartment.id).data
+    return str(nosql_info)
+
 
 @mcp.tool()
 def execute_query(compartment_name: str, sql_script: str) -> str:
     """execute a SQL query in a given compartment name"""
-    compartment = get_compartment_by_name(compartment_name)
-    if not compartment:
-        return json.dumps({"error": f"Compartment '{compartment_name}' not found. Use list_compartment_names() to see available compartments."})
+    #compartment = get_compartment_by_name(compartment_name)
+    #if not compartment:
+    #    return json.dumps({"error": f"Compartment '{compartment_name}' not found. Use list_compartment_names() to see available compartments."})
     
-    request = QueryRequest().set_statement(sql_script).set_compartment(compartment.id)
+    request = QueryRequest().set_statement(sql_script).set_compartment(compartment_name) ## compartment.id
     #rows = []
     #ru = 0
     #wu = 0
@@ -100,37 +125,6 @@ def execute_query(compartment_name: str, sql_script: str) -> str:
     
     #return json.dumps({"items":rows, "usage":usageIt, "usage2":usageIt2})
     return json.dumps({"items":rows, "usage":usagePt})
-
-@mcp.tool()
-def execute_query_internal(compartment_name: str, sql_script: str) -> str:
-    """execute a SQL query in a given compartment name"""
-    compartment = get_compartment_by_name(compartment_name)
-    if not compartment:
-        return json.dumps({"error": f"Compartment '{compartment_name}' not found. Use list_compartment_names() to see available compartments."})
-    
-    query_response = nosql_client.query(
-        query_details=oci.nosql.models.QueryDetails(
-            compartment_id=compartment.id,
-            statement=sql_script,
-            is_prepared=False,
-        )
-    );    
-    return str(query_response.data)
-    
-    #query_details = QueryDetails(
-    #     compartment_id = compartment,
-    #     statement = query_statement
-    #)
-
-    #page=None
-    #has_next_page=True
-    #while has_next_page:
-    #   query_response = client.query(query_details, page = page)
-    #   print('Query results')
-    #   print(len(query_response.data.items))
-    #   print(query_response.has_next_page)
-    #   page=query_response.next_page
-    #   has_next_page=query_response.has_next_page
 
 
 if __name__ == "__main__":
