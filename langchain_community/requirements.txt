@@ -5,6 +5,6 @@ typing
 
 # python modules for app.py
 oci
-langchain_community
+langchain-oci
 streamlit
 uuid

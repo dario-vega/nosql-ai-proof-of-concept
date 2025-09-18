@@ -1,12 +1,11 @@
 import streamlit as st
 import time
 import uuid
-from langchain_community.chat_models.oci_generative_ai import ChatOCIGenAI
+from langchain_oci import ChatOCIGenAI
 #from langchain_community.chat_message_histories import NoSQLDBChatMessageHistory
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.output_parsers import StrOutputParser
-
 
 model = ChatOCIGenAI(
     model_id="cohere.command-r-plus-08-2024",

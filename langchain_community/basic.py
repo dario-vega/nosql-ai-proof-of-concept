@@ -1,4 +1,4 @@
-from langchain_community.chat_models.oci_generative_ai import ChatOCIGenAI
+from langchain_oci import ChatOCIGenAI
 import streamlit as st
 import time
 
