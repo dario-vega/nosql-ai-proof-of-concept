@@ -7,27 +7,34 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.output_parsers import StrOutputParser
 
-print ("\n\n\n")
-print ("Welcome to ChatOCIGenAI with NoSQLDBChatMessageHistory")
-print ("======================================================")
-
+st.title('🦜🔗 LangChain Oracle NoSQL Bot')
+## Initialize the session_id in the streamlit session 
+if 'session_id' not in st.session_state:
+    st.session_state.session_id = str(uuid.uuid4())
+    print ("\n\n\n")
+    print ("Welcome to ChatOCIGenAI with NoSQLDBChatMessageHistory")
+    print ("======================================================")
+    
 model = ChatOCIGenAI(
     model_id="cohere.command-r-plus-08-2024", # "xai.grok-3" ,  
     service_endpoint="https://inference.generativeai.us-chicago-1.oci.oraclecloud.com",
     compartment_id="ocid1.compartment.oc1..aaaaaaaa4mlehopmvdluv2wjcdp4tnh2ypjz3nhhpahb4ss7yvxaa3be3diq",
-    model_kwargs={"temperature": 0, "max_tokens": 5},
+    model_kwargs={"temperature": 0, "max_tokens": 100},
 )
 
 
 ## Initialize the NoSQLDB chat message history
 from  NoSQLDBChatMessageHistory import NoSQLDBChatMessageHistory
 table_name = "SessionTable"
-session_id = str(uuid.uuid4())
-session_id = "my.mail@example.com"
-
+session_id = st.session_state.session_id
 compartment_id="ocid1.compartment.oc1..aaaaaaaa4mlehopmvdluv2wjcdp4tnh2ypjz3nhhpahb4ss7yvxaa3be3diq"
-history = NoSQLDBChatMessageHistory(table_name=table_name, session_id=session_id, compartment_id=compartment_id, region="us-ashburn-1")
-#history = NoSQLDBChatMessageHistory(table_name=table_name, session_id=session_id, compartment_id=compartment_id, region="us-ashburn-1",ttl=6)
+history = NoSQLDBChatMessageHistory(
+    table_name=table_name,
+    session_id=session_id,
+    compartment_id=compartment_id,
+    region="us-ashburn-1",
+    ttl=6
+)
 
 # Create the chat prompt template
 prompt_template = ChatPromptTemplate.from_messages(
@@ -38,7 +45,7 @@ prompt_template = ChatPromptTemplate.from_messages(
     ]
 )
 
-# Combine the prompt with the Bedrock LLM
+# Combine the prompt with the ChatOCIGenAI LLM
 chain = prompt_template | model | StrOutputParser()
 
 
@@ -51,7 +58,6 @@ chain_with_history = RunnableWithMessageHistory(
     history_messages_key="history",
 )
 
-st.title('🦜🔗 LangChain Oracle NoSQL Bot')
 
 # Load messages from NoSQLDB and populate chat history
 if "messages" not in st.session_state:
