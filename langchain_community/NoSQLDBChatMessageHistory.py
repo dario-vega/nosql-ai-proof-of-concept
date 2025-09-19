@@ -49,12 +49,13 @@ class NoSQLDBChatMessageHistory(BaseChatMessageHistory):
         storage: Optional[str] = 1,
     ):
         
-        print("Connecting to the Oracle NoSQL Cloud Service")
         self.region = region
         self.table = table_name
         self.compartment_id = compartment_id
         self.session_id = session_id
         self.ttl = ttl
+
+        print("Connecting to the Oracle NoSQL Cloud Service: " + self.session_id + session_id)
         
         if auth_type == "API_KEY":
            provider = SignatureProvider(config_file=auth_file_location, profile_name=auth_profile);
@@ -91,7 +92,7 @@ class NoSQLDBChatMessageHistory(BaseChatMessageHistory):
         #     model.invoke([HumanMessage("Who build pyramides")])
         # ]
         # stored_messages = messages_to_dict(messages)
-        print("Retrieve the messages from NoSQLDB")
+        print("Retrieve the messages from NoSQLDB: " + self.session_id)
         request = GetRequest().set_key({'id': self.session_id}).set_table_name(self.table)
         result = self.handle.get(request)
         if result.get_value() is None:
@@ -110,10 +111,10 @@ class NoSQLDBChatMessageHistory(BaseChatMessageHistory):
 
     def add_messages(self, messages: Sequence[BaseMessage]) -> None:        
         """Append the message to the record in NoSQLDB"""
-        print("Append the messages to NoSQLDB")
         existing_messages = messages_to_dict(self.messages)
         existing_messages.extend(messages_to_dict(messages))
-        
+
+        print("Append the messages to NoSQLDB: " + self.session_id )      
         request = PutRequest().set_table_name(self.table)
         if self.ttl is not None:
             request.set_ttl (TimeToLive.of_hours(self.ttl))
@@ -122,5 +123,6 @@ class NoSQLDBChatMessageHistory(BaseChatMessageHistory):
 
     def clear(self) -> None:
         """Clear session memory from NoSQLDB"""
+        print("Delete the messages to NoSQLDB: " + self.session_id )      
         request = DeleteRequest().set_key({'id': self.session_id}).set_table_name(self.table)
         result = handle.delete(request)
