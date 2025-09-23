@@ -11,6 +11,10 @@ from borneo import (Regions, NoSQLHandle, NoSQLHandleConfig,
 from borneo.iam import SignatureProvider
 from borneo.kv import StoreAccessTokenProvider
 
+# import the time module
+import time
+
+
 #global oracleNoSQL 
 #oracleNoSQL = None;
 
@@ -92,7 +96,7 @@ class NoSQLDBChatMessageHistory(BaseChatMessageHistory):
         #     model.invoke([HumanMessage("Who build pyramides")])
         # ]
         # stored_messages = messages_to_dict(messages)
-        print("Retrieve the messages from NoSQLDB: " + self.session_id)
+        start_time = time.time()
         request = GetRequest().set_key({'id': self.session_id}).set_table_name(self.table)
         result = self.handle.get(request)
         if result.get_value() is None:
@@ -100,6 +104,9 @@ class NoSQLDBChatMessageHistory(BaseChatMessageHistory):
         else:
           retrieved_messages = result.get_value()['items']
         messages = messages_from_dict(retrieved_messages)
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print("Retrieve the messages from NoSQLDB: " + self.session_id  + " " + str(elapsed_time) )
         return messages
 
     @messages.setter
@@ -113,16 +120,26 @@ class NoSQLDBChatMessageHistory(BaseChatMessageHistory):
         """Append the message to the record in NoSQLDB"""
         existing_messages = messages_to_dict(self.messages)
         existing_messages.extend(messages_to_dict(messages))
-
-        print("Append the messages to NoSQLDB: " + self.session_id )      
+        
+        start_time = time.time()
         request = PutRequest().set_table_name(self.table)
         if self.ttl is not None:
             request.set_ttl (TimeToLive.of_hours(self.ttl))
         request.set_value({"id":self.session_id , "items":existing_messages})
         result = self.handle.put(request)
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print("Append the messages to NoSQLDB: " + self.session_id  + " " + str(elapsed_time) )      
+
 
     def clear(self) -> None:
         """Clear session memory from NoSQLDB"""
         print("Delete the messages to NoSQLDB: " + self.session_id )      
         request = DeleteRequest().set_key({'id': self.session_id}).set_table_name(self.table)
-        result = handle.delete(request)
+        result = self.handle.delete(request)
+
+    def close_handle(self) -> None:
+        """Clear session memory from NoSQLDB"""
+        if self.handle is not None:
+           print("Close the connection to the Oracle NoSQL Cloud Service")
+           self.handle.close()

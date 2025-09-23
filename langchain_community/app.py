@@ -7,21 +7,38 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.output_parsers import StrOutputParser
 
-st.title('🦜🔗 LangChain Oracle NoSQL Bot')
 ## Initialize the session_id in the streamlit session 
 if 'session_id' not in st.session_state:
     st.session_state.session_id = str(uuid.uuid4())
     print ("\n\n\n")
     print ("Welcome to ChatOCIGenAI with NoSQLDBChatMessageHistory")
     print ("======================================================")
-    
+
+# Replicate Credentials
+with st.sidebar:
+    st.title('🦜🔗 LangChain Oracle NoSQL Bot')
+
+    st.subheader('Models and parameters')
+    selected_model = st.sidebar.selectbox('Choose a model', ['Cohere Command', 'xAI.Grok-3'], key='selected_model')
+    if selected_model == 'Cohere Command':
+        llm = 'cohere.command-r-plus-08-2024'
+    elif selected_model == 'xAI.Grok-3':
+        llm = 'xai.grok-3'
+    else:
+        llm = 'cohere.command-r-plus-08-2024'    
+    temperature = st.sidebar.slider('temperature', min_value=0.01, max_value=2.0, value=0.7, step=0.1)
+    top_p = st.sidebar.slider('top_p', min_value=0.01, max_value=1.0, value=0.95, step=0.01)
+    top_k = st.sidebar.slider('top_k', min_value=5, max_value=100, value=50, step=1)
+    max_tokens = st.sidebar.slider('max_tokens', min_value=32, max_value=700, value=100, step=10)
+    with_history = st.sidebar.toggle('With Memory Context', value=True)
+    st.markdown('📖 Learn about this project (https://github.com/dario-vega/nosql-ai-proof-of-concept/')
+
 model = ChatOCIGenAI(
-    model_id="cohere.command-r-plus-08-2024", # "xai.grok-3" ,  
+    model_id=llm ,  
     service_endpoint="https://inference.generativeai.us-chicago-1.oci.oraclecloud.com",
     compartment_id="ocid1.compartment.oc1..aaaaaaaa4mlehopmvdluv2wjcdp4tnh2ypjz3nhhpahb4ss7yvxaa3be3diq",
-    model_kwargs={"temperature": 0, "max_tokens": 100},
+    model_kwargs={"temperature": temperature, "max_tokens": max_tokens, "top_p": top_p, "top_k": top_k},
 )
-
 
 ## Initialize the NoSQLDB chat message history
 from  NoSQLDBChatMessageHistory import NoSQLDBChatMessageHistory
@@ -85,15 +102,23 @@ if prompt := st.chat_input("What is up?"):
     st.session_state.messages.append({"role": "user", "content": prompt})
    
     # Generate assistant response using ChatOCIGenAI LLM and LangChain
-    config = {"configurable": {"session_id": session_id}}
-    response = chain_with_history.invoke({"question": prompt}, config=config)
-    #response = model.invoke(prompt, temperature=0.7)
+    if with_history:
+        config = {"configurable": {"session_id": session_id}}
+        response = chain_with_history.invoke({"question": prompt}, config=config)
+    else:
+        response = model.invoke(prompt, temperature=0.7)
 
     # Display assistant response in chat message container
     with st.chat_message("assistant"):
-        st.markdown(response)
-        #st.markdown(response.content)
+        if with_history:
+            st.markdown(response)
+        else:
+            st.markdown(response.content)
     # Add assistant response to chat history
-    #st.session_state.messages.append({"role": "assistant", "content": response.content})
-    st.session_state.messages.append({"role": "assistant", "content": response})
-     
+    if with_history:
+        st.session_state.messages.append({"role": "assistant", "content": response})
+    else: 
+        st.session_state.messages.append({"role": "assistant", "content": response.content})
+ 
+history.close_handle()
+ 
