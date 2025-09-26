@@ -130,7 +130,26 @@ def describe_nosql_table(compartment_name: str, table_name: str ) -> str:
 
 @mcp.tool()
 def execute_query(compartment_name: str, sql_script: str) -> str:
-    """execute a SQL query in a given compartment name"""
+    """Execute a SQL query in Oracle NoSQL database using standard endpoint.
+    
+    USAGE GUIDELINES:
+    - Always add a comment in the SQL queries : '/* AI Tool: [your-name] - Query */'
+    - Use this for basic queries and standard operations
+    - For complex queries or when experiencing issues, prefer the Borneo endpoint (_borneo variant)
+    - Use alias '$t' for table references in queries
+    - Do not use '$t.*' just '$t' if you want to have all the information or just '*'
+    - for LIKE expresions use regex_like expressions
+    - Oracle NoSQL supports Function on Rows including modification_time and expiration_time (more https://docs.oracle.com/en/database/other-databases/nosql-database/25.1/sqlreferencefornosql/functions-rows.html)
+    - Always CAST timestamp functions to STRING: modification_time(t),expirationtime(t) due to JSON serialization
+    
+    Example:
+    SELECT /*  AI Tool: Claude - Query*/ * FROM users $t    
+    SELECT /*  AI Tool: GPT-4 - Query*/ * FROM users $t    
+    
+    Args:
+        compartment_name: The compartment name to query
+        sql_script: The SQL script to execute
+    """
     compartment = get_compartment_by_name(compartment_name)
     if not compartment:
         return json.dumps({"error": f"Compartment '{compartment_name}' not found. Use list_compartment_names() to see available compartments."})
@@ -152,7 +171,15 @@ def execute_query(compartment_name: str, sql_script: str) -> str:
 
 @mcp.tool()
 def list_nosql_tables_borneo(compartment_name: str) -> str:
-    """List all tables in a given compartment name"""
+    """List all tables in a given compartment using Borneo endpoint.
+    
+    REMINDER: This uses Borneo endpoint. 
+    - It provides only table names. 
+    - Use list_nosql_tables if you want details. Or better ask the details for a specific table using describe_nosql_table_borneo
+    
+    Args:
+        compartment_name: The compartment name to list tables from
+    """
     ltr = ListTablesRequest().set_compartment(compartment_name)
     lt_result = handle.list_tables(ltr)
     return( json.dumps(lt_result.get_tables()) )
@@ -160,7 +187,14 @@ def list_nosql_tables_borneo(compartment_name: str) -> str:
 
 @mcp.tool()
 def describe_nosql_table_borneo(compartment_name: str, table_name: str ) -> str:
-    """describe a NoSQL table in a given compartment name"""
+    """Describe a NoSQL table structure using Borneo endpoint.
+    
+    NOTE: When querying this table later, use Borneo endpoint and see IMPORTANT INSTRUCTIONS.
+    
+    Args:
+        compartment_name: The compartment name
+        table_name: The table name to describe
+    """
     gtr = GetTableRequest().set_table_name(table_name).set_compartment(compartment_name)
     gr_result = handle.get_table(gtr)
     limits = None if not gr_result.get_table_limits() else dict(
@@ -185,7 +219,6 @@ def describe_nosql_table_borneo(compartment_name: str, table_name: str ) -> str:
                             )
     return json.dumps(
              {
-               "comment": "Kill Bill",
                "compartment_id": gr_result.get_compartment_id(),
                "ddl_statement": gr_result.get_ddl(), 
                "defined_tags": gr_result.get_defined_tags(), 
@@ -204,7 +237,25 @@ def describe_nosql_table_borneo(compartment_name: str, table_name: str ) -> str:
 
 @mcp.tool()
 def execute_query_borneo(compartment_name: str, sql_script: str) -> str:
-    """execute a SQL query in a given compartment name"""
+    """execute a SQL query in a given compartment name
+       
+    IMPORTANT INSTRUCTIONS:
+    - Always add a comment in the SQL queries : '/* AI Tool: [your-name] - Query */' 
+    - Use the Borneo endpoint for queries by default
+    - Use alias '$t' for table references in queries
+    - Do not use '$t.*' just '$t' if you want to have all the information or just '*'
+    - for LIKE expresions use regex_like expressions
+    - Oracle NoSQL supports Function on Rows including modification_time and expiration_time (more https://docs.oracle.com/en/database/other-databases/nosql-database/25.1/sqlreferencefornosql/functions-rows.html)
+    - Always CAST timestamp functions to STRING: modification_time(t),expirationtime(t) due to JSON serialization
+    
+    Example:
+    SELECT /*  AI Tool: Claude - Query*/ * FROM users $t    
+    SELECT /*  AI Tool: GPT-4 - Query*/ * FROM users $t    
+    
+    Args:
+        compartment_name: The compartment name to query
+        sql_script: The SQL script to execute
+    """
     
     request = QueryRequest().set_statement(sql_script).set_compartment(compartment_name) ## compartment.id
     #rows = []
