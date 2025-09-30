@@ -96,7 +96,8 @@ class NoSQLDBChatMessageHistory(BaseChatMessageHistory):
         #     model.invoke([HumanMessage("Who build pyramides")])
         # ]
         # stored_messages = messages_to_dict(messages)
-        start_time = time.time()
+        # Use perf_counter for higher precision timing
+        start_time = time.perf_counter()
         request = GetRequest().set_key({'id': self.session_id}).set_table_name(self.table)
         result = self.handle.get(request)
         if result.get_value() is None:
@@ -104,9 +105,9 @@ class NoSQLDBChatMessageHistory(BaseChatMessageHistory):
         else:
           retrieved_messages = result.get_value()['items']
         messages = messages_from_dict(retrieved_messages)
-        end_time = time.time()
+        end_time = time.perf_counter()
         elapsed_time = end_time - start_time
-        print("Retrieve the messages from NoSQLDB: " + self.session_id  + " " + str(elapsed_time) )
+        print(f"Retrieve the messages from NoSQLDB: {self.session_id} : {elapsed_time:.6f} seconds ({elapsed_time * 1000:.2f} milliseconds)")
         return messages
 
     @messages.setter
@@ -121,15 +122,16 @@ class NoSQLDBChatMessageHistory(BaseChatMessageHistory):
         existing_messages = messages_to_dict(self.messages)
         existing_messages.extend(messages_to_dict(messages))
         
-        start_time = time.time()
+        # Use perf_counter for higher precision timing
+        start_time = time.perf_counter()
         request = PutRequest().set_table_name(self.table)
         if self.ttl is not None:
             request.set_ttl (TimeToLive.of_hours(self.ttl))
         request.set_value({"id":self.session_id , "items":existing_messages})
         result = self.handle.put(request)
-        end_time = time.time()
+        end_time = time.perf_counter()
         elapsed_time = end_time - start_time
-        print("Append the messages to NoSQLDB: " + self.session_id  + " " + str(elapsed_time) )      
+        print(f"Append the messages to NoSQLDB: {self.session_id} : {elapsed_time:.6f} seconds ({elapsed_time * 1000:.2f} milliseconds)")
 
 
     def clear(self) -> None:
