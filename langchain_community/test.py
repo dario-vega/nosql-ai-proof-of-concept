@@ -74,6 +74,7 @@ while True:
     #   print(response)
     #else:
     #   print(response.content)
+    print(history._debug)
  
 history.close_handle()
  

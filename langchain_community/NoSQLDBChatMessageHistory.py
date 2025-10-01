@@ -58,8 +58,9 @@ class NoSQLDBChatMessageHistory(BaseChatMessageHistory):
         self.compartment_id = compartment_id
         self.session_id = session_id
         self.ttl = ttl
+        self._debug = ""
 
-        print("Connecting to the Oracle NoSQL Cloud Service: " + self.session_id + session_id)
+        print("Connecting to the Oracle NoSQL Cloud Service: " + self.session_id)
         
         if auth_type == "API_KEY":
            provider = SignatureProvider(config_file=auth_file_location, profile_name=auth_profile);
@@ -80,7 +81,6 @@ class NoSQLDBChatMessageHistory(BaseChatMessageHistory):
         try:
             getTableRequest = GetTableRequest().set_table_name(self.table)
             result = self.handle.get_table(getTableRequest)
-            print('After get table: ' + str(result))
         except TableNotFoundException as e:
             statement = ('Create table if not exists {} (id STRING, items JSON, primary key(id))').format(self.table)
             request = TableRequest().set_statement(statement).set_table_limits(TableLimits(ru, wu, storage))
@@ -100,14 +100,15 @@ class NoSQLDBChatMessageHistory(BaseChatMessageHistory):
         start_time = time.perf_counter()
         request = GetRequest().set_key({'id': self.session_id}).set_table_name(self.table)
         result = self.handle.get(request)
+        end_time = time.perf_counter()
+        elapsed_time = end_time - start_time
         if result.get_value() is None:
           retrieved_messages = []
         else:
           retrieved_messages = result.get_value()['items']
         messages = messages_from_dict(retrieved_messages)
-        end_time = time.perf_counter()
-        elapsed_time = end_time - start_time
-        print(f"Retrieve the messages from NoSQLDB: {self.session_id} : {elapsed_time:.6f} seconds ({elapsed_time * 1000:.2f} milliseconds)")
+        self.add_debug_message(f"Retrieved messages from NoSQLDB: {elapsed_time * 1000:.2f} milliseconds")
+
         return messages
 
     @messages.setter
@@ -131,8 +132,7 @@ class NoSQLDBChatMessageHistory(BaseChatMessageHistory):
         result = self.handle.put(request)
         end_time = time.perf_counter()
         elapsed_time = end_time - start_time
-        print(f"Append the messages to NoSQLDB: {self.session_id} : {elapsed_time:.6f} seconds ({elapsed_time * 1000:.2f} milliseconds)")
-
+        self.add_debug_message(f"Append the messages to NoSQLDB: {elapsed_time * 1000:.2f} milliseconds")
 
     def clear(self) -> None:
         """Clear session memory from NoSQLDB"""
@@ -145,3 +145,13 @@ class NoSQLDBChatMessageHistory(BaseChatMessageHistory):
         if self.handle is not None:
            print("Close the connection to the Oracle NoSQL Cloud Service")
            self.handle.close()
+
+    def add_debug_message(self, message):
+        """Add debug message - keeping only the 10 last lines"""        
+        self._debug += f"\n{message}"
+        debug_lines = self._debug.split('\n')
+        last_10_lines = debug_lines[-10:]
+        self._debug = '\n'.join(last_10_lines)
+        if self._debug and not self._debug.startswith('\n'):
+            self._debug = '\n' + self._debug
+            

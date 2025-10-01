@@ -120,5 +120,8 @@ if prompt := st.chat_input("What is up?"):
     else: 
         st.session_state.messages.append({"role": "assistant", "content": response.content})
  
+    debug_info = history._debug.replace('\n', '<br><li>')
+    st.markdown(f"🔍 **🐞 Measurement:**{debug_info}", unsafe_allow_html=True)
+    
 history.close_handle()
  
