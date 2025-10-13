@@ -1,6 +1,20 @@
 """
-Copyright (c) 2025, Oracle and/or its affiliates.
-Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
+CAUTION
+
+Granting a large language model (LLM) access to your database introduces significant security risks.
+LLMs may use input data to generate responses, potentially exposing unintended tables or sensitive details.
+
+To mitigate these risks:
+- **Use a private LLM whenever possible:** Private (self-hosted or controlled) LLMs provide more control over data and minimize risk of exposure to external parties.
+- Assign minimum permissions: Configure an account for the LLM with only the permissions necessary for its tasks.
+- Avoid production database access: Do not grant LLMs direct access to production data; use a sanitized, read-only replica or a dedicated data subset.
+- Audit LLM activity: Regularly monitor and review queries executed by the LLM for anomalies or unauthorized data access attempts.
+
+A script called `anonimizer*.py` is provided for data anonymization purposes. **USE AT YOUR OWN RISK.**
+- The script does not guarantee complete anonymization or compliance with all regulatory or organizational requirements.
+
+Always review the code and its outputs before using it in production environments, and consult your security and compliance guidelines.
+Security and compliance are your responsibility when integrating LLMs or running anonymization scripts.
 """
 
 import os.path
