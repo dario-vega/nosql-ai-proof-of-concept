@@ -139,4 +139,84 @@ ANONYMIZERS = {
     "address": random_address,
     "credit_card": random_credit_card,
     "creditcard": random_credit_card,
-    "
+    "cardnumber": random_credit_card,
+    "email": random_email,
+    "mail": random_email,
+    "ssn": random_ssn,
+    "social_security": random_ssn,
+    "username": random_name
+}
+
+def anonymize_json(data, anonymizer_map=ANONYMIZERS):
+    """Recursively anonymizes dict, list, or value."""
+    if isinstance(data, dict):
+        new_data = {}
+        for k, v in data.items():
+            key_lower = k.lower()
+            if key_lower in FIELDS_TO_SKIP:
+                new_data[k] = v
+                continue
+            func = anonymizer_map.get(key_lower)
+            if func and callable(func):
+                new_data[k] = func()
+            elif isinstance(v, (dict, list)):
+                new_data[k] = anonymize_json(v, anonymizer_map)
+            else:
+                new_data[k] = anonymize_value(v)
+        return new_data
+    elif isinstance(data, list):
+        return [anonymize_json(item, anonymizer_map) for item in data]
+    else:
+        return anonymize_value(data)
+
+def anonymize_data(data):
+    """
+    Anonymize a dict/list or a JSON string.
+    Returns the same type as input (dict or str).
+    """
+    if isinstance(data, str):
+        try:
+            data_obj = json.loads(data)
+            anon_data = anonymize_json(data_obj)
+            return json.dumps(anon_data)
+        except json.JSONDecodeError:
+            raise ValueError("Invalid JSON string.")
+    else:
+        return anonymize_json(data)
+
+# --- Example usage ---
+if __name__ == "__main__":
+    # TEST: as Python dict
+    original_dict = {
+        "id": 101,
+        "type": "employee",
+        "status": "active",
+        "name": "Jane Doe",
+        "phone": "123-456-7890",
+        "custom_field": "Sensitive",
+        "employee_id": 1002,
+        "amount": 999.99,
+        "is_active": True,
+        "address": "1 Infinite Loop",
+        "credit_card": "4111111111111111",
+        "email": "test@oracle.com",
+        "ssn": "111-11-1111",
+        "details": {
+            "favorite_color": "Blue",
+            "lucky_number": 7,
+            "phone_number": "555-000-1111",
+            "internal_id": 999
+        },
+        "records": [
+            {"username": "johnsmith", "mail": "john@oracle.com", "social_security": "123-45-6789"}
+        ]
+    }
+    print("Original dict:\n", json.dumps(original_dict, indent=2))
+    print("\nAnonymized dict:\n", json.dumps(anonymize_data(original_dict), indent=2))
+
+    # TEST: as JSON string
+    original_json = json.dumps(original_dict)
+    anon_json = anonymize_data(original_json)
+    print("\nOriginal JSON string:\n", original_json)
+    print("\nAnonymized JSON string:\n", anon_json)
+ 
