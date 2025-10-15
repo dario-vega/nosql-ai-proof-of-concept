@@ -104,17 +104,20 @@ def get_compartment_by_name_v2(compartment_name: str):
     except Exception as e:
         return None
 
-# @mcp.tool()
+@mcp.tool()
 def list_all_compartments() -> str:
     """List all compartments in a tenancy with clear formatting"""
-    return str(list_all_compartments_internal(True))
+    compartments= list_all_compartments_internal(True)
+    filtered = [{'name': c.name, 'parent_compartment_id': c.compartment_id} for c in compartments]
+    return json.dumps(filtered)
 
 @mcp.tool()
 def get_compartment_by_name_tool(name: str) -> str:
     """Return a compartment matching the provided name"""
     compartment = get_compartment_by_name(name)
     if compartment:
-        return str(compartment)
+        filtered = {'name': compartment.name, 'parent_compartment_id': compartment.compartment_id}
+        return json.dumps(filtered)
     else:
         return str({"error": f"Compartment '{name}' not found."})
 
