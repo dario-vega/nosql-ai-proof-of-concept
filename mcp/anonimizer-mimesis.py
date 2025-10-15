@@ -1,70 +1,59 @@
+"""
+PRIVACY, COMPLIANCE, AND USE-AT-YOUR-OWN-RISK NOTICE:
+-----------------------------------------------------
+This script is intended as an example for generating anonymized or synthetic data 
+using open-source tools such as Mimesis. It is licensed under the MIT License.
+
+**USE THIS SCRIPT AT YOUR OWN RISK.**
+
+- This is NOT a substitute for professionally reviewed, enterprise data anonymization or masking solutions.
+- The script does not guarantee compliance with data privacy regulations (such as GDPR, CCPA, etc.) 
+  or internal corporate security policies.
+- It is YOUR responsibility to review and adapt both the anonymization logic and any third-party libraries 
+  to your organization’s specific data, risk tolerance, regulatory environment, and security requirements.
+- Always consult your privacy, legal, and compliance teams before using anonymized or synthetic data 
+  outside of approved, nonproduction environments or for any sharing beyond your organization.
+- Inadequate or incorrect anonymization can lead to accidental data leaks or re-identification risk.
+
+OPEN SOURCE, THIRD-PARTY, AND PROFESSIONAL TOOLS:
+-------------------------------------------------
+- Open-source libraries such as Mimesis are powerful but must be vetted for security, licensing, 
+  and compliance, especially when handling regulated or sensitive data.
+- Use of any third-party or external tools should align with your organization's approved software lists 
+  and risk management processes.
+- For critical use cases, consider professionally supported, enterprise-class anonymization, 
+  masking, or synthetic data generation solutions recommended by your organization.
+
+"""
+
 import random
 import string
 import json
+# Mimesis anonymizer function example
+from mimesis import Person, Address, Payment, Internet
+person = Person('en')
+address = Address('en')
+payment = Payment()
+internet = Internet()
 
-# --- Specific anonymizers ---
-FIRST_NAMES = [
-    "Alice", "Bob", "Carol", "David", "Eve", "Frank", "Grace", "Heidi",
-    "Ivan", "Julia", "Kumar", "Laila", "Mohammed", "Nina", "Oscar", "Priya"
-]
-LAST_NAMES = [
-    "Smith", "Johnson", "Davis", "Lee", "Martinez", "Brown", "Garcia", "Wilson",
-    "Suzuki", "Schmidt", "Dubois", "Singh", "Khan", "Silva", "Nguyen", "Kim"
-]
-FICTIONAL_ADDRESSES = [
-    # USA
-    "123 Imaginary Ave, Faketown, CA 94101, USA",
-    "456 Nowhere Rd, Example City, TX 75001, USA",
-    "789 Fictional Blvd, Testville, NY 10001, USA",
-    # UK
-    "10 Downing St, London SW1A 2AA, UK",
-    "221B Baker St, London NW1 6XE, UK",
-    "42 Fantasy Lane, Manchester M1 2AB, UK",
-    # Germany
-    "5 Musterstraße, 12345 Berlin, Germany",
-    "12 Hauptstrasse, 50667 Köln, Germany",
-    "36 Fiktive Allee, 80331 München, Germany",
-    # France
-    "14 Rue de l'Exemple, 75001 Paris, France",
-    "25 Avenue Imaginaire, 69002 Lyon, France",
-    "7 Boulevard Fictif, 13001 Marseille, France",
-    # Japan
-    "1-2-3 Sakura St, Minato, Tokyo 105-0011, Japan",
-    "4-5-6 Fujimi, Chiyoda-ku, Tokyo 102-0071, Japan",
-    "8-9-10 Umeda, Kita-ku, Osaka 530-0001, Japan",
-    # India
-    "101 MG Road, Bengaluru 560001, India",
-    "202 Andheri West, Mumbai 400053, India",
-    "303 Sector 18, Noida 201301, India",
-    # Canada
-    "88 Main St, Toronto, ON M5J 2N5, Canada",
-    "77 Rue Sainte-Catherine, Montréal, QC H3B 1E3, Canada",
-    "66 Granville St, Vancouver, BC V6C 1T2, Canada",
-    # Brazil
-    "12 Avenida Paulista, São Paulo, SP 01310-100, Brazil",
-    "23 Rua Fictícia, Rio de Janeiro, RJ 20210-010, Brazil",
-    # Australia
-    "15 Queen St, Melbourne VIC 3000, Australia",
-    "19 George St, Sydney NSW 2000, Australia",
-    "21 Adelaide St, Brisbane QLD 4000, Australia",
-    # South Africa
-    "55 Nelson Mandela Ave, Johannesburg 2001, South Africa",
-    "32 Table Mountain Rd, Cape Town 8001, South Africa"
-]
 
-# ---- Anonymizer Functions ----
+# --- Anonymizer Functions using mimesis ---
 def random_name():
-    return f"{random.choice(FIRST_NAMES)} {random.choice(LAST_NAMES)}"
+    return person.full_name()
 def random_phone():
-    return f"555-{random.randint(100, 999)}-{random.randint(1000, 9999)}"
+    return f"555-{random.randint(100, 999)}-{random.randint(1000,9999)}"
 def random_address():
-    return random.choice(FICTIONAL_ADDRESSES)
+    return address.address().replace('\n', ', ')
 def random_credit_card():
-    return "4" + "".join([str(random.randint(0, 9)) for _ in range(15)])
+    return payment.credit_card_number()
 def random_email():
-    return f"{random.choice(FIRST_NAMES).lower()}.{random.choice(LAST_NAMES).lower()}@example.com"
+    # Generate a random email with basic structure
+    first = ''.join(random.choices(string.ascii_lowercase, k=random.randint(5, 8)))
+    last = ''.join(random.choices(string.ascii_lowercase, k=random.randint(4, 7)))
+    domain = random.choice(['example.com', 'sample.org', 'test.net'])
+    return f"{first}.{last}@{domain}"
 def random_ssn():
-    return f"{random.randint(100,999)}-{random.randint(10,99)}-{random.randint(1000,9999)}"
+    return person.identifier(mask='@@@-@@-@@@@')
 def anonymize_value(value):
     if isinstance(value, str):
         return ''.join(random.choices(string.ascii_letters + string.digits, k=len(value)))
@@ -150,7 +139,7 @@ if __name__ == "__main__":
      # Extract dicts
      field_mapping = config['field_mapping']
      except_fields = set(config['except_fields'])
-
+    
      anonymizer = DataAnonymizer(field_mapping=field_mapping, except_fields=except_fields)
      
      original = {
@@ -187,3 +176,4 @@ if __name__ == "__main__":
      json_input = json.dumps(original)
      print("\nAnonymized (JSON string input):")
      print(anonymizer.anonymize(json_input))
+     

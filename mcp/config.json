@@ -1,0 +1,13 @@
+{
+    "field_mapping": {
+        "name": "random_name",
+        "phone": "random_phone",
+        "credit_card": "random_credit_card",
+        "email": "random_email",
+        "address": "random_address",
+        "ssn": "random_ssn",
+        "bob": "bob",
+        "*": "anonymize_value"
+    },
+    "except_fields": ["id", "status"]
+}
