@@ -95,7 +95,7 @@ Example JSON entry for Claude UI on Windows:
     }
   }
 }
-
+```
 
 ## Usage
 
@@ -131,7 +131,7 @@ This project has been tested with MCP-compatible clients such as Claude Desktop.
 See https://modelcontextprotocol.io/quickstart/user  for more examples.
 
 ## Further Guidance 
-* When using anonymization scripts, always manually review outputs for adequacy and compliance.
-* In regulated or sensitive environments, always consult with your legal, privacy, and compliance teams before deploying, adapting, or integrating any LLM- or AI-based workflow with your data or systems.
-* For important business automation or anonymization needs, prefer professionally supported tools rated for enterprise use and compliance.
+- When using anonymization scripts, always manually review outputs for adequacy and compliance.
+- In regulated or sensitive environments, always consult with your legal, privacy, and compliance teams before deploying, adapting, or integrating any LLM- or AI-based workflow with your data or systems.
+- For important business automation or anonymization needs, prefer professionally supported tools rated for enterprise use and compliance.
      
