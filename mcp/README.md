@@ -60,9 +60,9 @@ It is intended exclusively for local experimentation, technical exploration, and
 ## Prerequisites
 
 - Python 3.x
-- [`fastmcp`](https://github.com/ModelContextProtocol/fastmcp/) (via `requirements.txt`)
-- [OCI Python SDK (`oci`)](https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/pythonsdk.htm)
-- [NoSQL SDK (Borneo)](https://docs.oracle.com/en/database/other-databases/nosql-database/25.1/java-driver/index.html)
+- `fastmcp` (via `requirements.txt`)
+- [OCI Python SDK (`oci`)](https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/pythonsdk.htm) via (`requirements.txt`)
+- [NoSQL SDK (Borneo)](https://github.com/oracle/nosql-python-sdk) via (`requirements.txt`)
 - OCI credentials/config file
 
 ---
@@ -75,14 +75,14 @@ It is intended exclusively for local experimentation, technical exploration, and
     ```
 
 2. **Set up your OCI configuration**
-    - Edit `~/.oci/config` as described in the OCI SDK documentation.
+    - Edit `~/.oci/config` as described in the OCI SDK documentation [here](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/sdkconfig.htm).
 
 ---
 
 ## MCP Server Configuration
 
-Register the server with your MCP client.  
-Example JSON entry for Claude UI on Windows:
+Installation is dependent on the MCP Client being used, it usually consists of adding the MCP Server invocation in a json config file, 
+for example with Claude UI on windows it looks like this:
 
 ```json
 {
@@ -96,6 +96,40 @@ Example JSON entry for Claude UI on Windows:
   }
 }
 ```
+
+Example with custom PROFILE_NAME - Accesing two OCI regions
+
+```json
+{
+  "mcpServers": {
+    "nosql-iad": {
+      "command": "C:\\Python\\python.exe",
+      "args": [
+                 "C:\\Users\\user1\\nosql-ai-proof-of-concept\\nosqltools-mcp-server.py"
+              ],
+	  "env": {
+				 "PROFILE_NAME": "IAD"
+			 }
+    },
+    "nosql-cdg": {
+      "command": "C:\\Python\\python.exe",
+      "args": [
+                 "C:\\Users\\user1\\nosql-ai-proof-of-concept\\nosqltools-mcp-server.py"
+              ],
+	  "env": {
+				 "PROFILE_NAME": "CDG"
+			 }
+    }
+  }
+}
+```
+
+## Environment Variables
+
+The server supports the following environment variables:
+
+- PROFILE_NAME: OCI configuration profile name (default: "DEFAULT")
+
 
 ## Usage
 
