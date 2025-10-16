@@ -1,118 +1,81 @@
 # NoSQL-tools MCP Server (`nosqltools-mcp-server.py`)
 
-## ⚠️ CAUTION & DISCLAIMER
+## 🚧 CAUTION & DISCLAIMER
 
-> **This repository is intended for proof-of-concept and exploration purposes only.  
-> USE AT YOUR OWN RISK.**
+> **Not for Production — For Experimental/Education Use Only**
 >
-> - This MCP server interacts directly with your OCI NoSQL resources. If misconfigured or used carelessly, it may expose, modify, or delete sensitive data.
-> - Do **not** run against production environments or confidential data.
-> - This code does **not** guarantee data privacy or compliance with regulatory standards (such as GDPR, CCPA, etc.) or with your organization’s security policies.
-> - **You** are responsible for correct permissions, configuration, and data security.
-> - Always use minimum required privileges and review all logs and outcomes.
-> - If you use anonymization or data-handling scripts (such as `anonimizer*.py`), review them and their outputs for adequacy and risk.
-> - Before using any open-source or third-party tool in this context, confirm it is approved and compliant by your legal, security, and privacy teams.
+> This MCP server interacts with OCI NoSQL resources and can expose, modify, or delete data.  
+> **You are solely responsible for correct setup, permissions, and data security.**
+>
+> - **DO NOT USE with production data or environments.**
+> - **No guarantee of data privacy or regulatory compliance** (GDPR, CCPA, etc.).
+> - **Review, audit, and sanitize all activity and results.**
+> - Before using any third-party tools/scripts (like `anonimizer*.py`), ensure they meet your legal, privacy, and security standards.
+>
+> *No warranty is provided. Use at your own risk and in accordance with your organization's legal, security, and privacy policies.*
 
 ---
 
-## Overview
+## Why Use This Tool?
 
-`nosqltools-mcp-server.py` is a FastMCP-based MCP server that exposes tools for managing and querying **OCI NoSQL tables** via the [Model Context Protocol (MCP)](https://github.com/oracle/mcp).  
-This server is designed for hands-on experimentation and **is not suitable for production use**.
+This project enables hands-on exploration of AI and NoSQL data workflows using the Model Context Protocol (MCP), such as rapid prototyping, learning, and proof-of-concept demos.  
+**Experiments with private, compliance-approved LLMs can unlock powerful automation and data insights—provided you follow responsible security and privacy practices.**
+
+---
+
+## Key Risks and Security Practices
+
+### ⚠️ AI & LLM Data Exposure Warning
+
+- **LLMs may inadvertently reveal or retain any data you provide—including confidential or sensitive data.**
+- **Never connect LLMs to production data.** Use only masked/sanitized test data for experimentation.
+- Prefer **private LLMs** (deployed within your own organization) to minimize data risk and maximize compliance and control.
+- **Consult with your compliance and security teams before enabling LLM-based workflows for any business data.**
+
+### Security Quick Checklist
+
+- Use least-privilege OCI accounts and assign only necessary permissions.
+- Regularly review and audit logs, outputs, and queries for privacy breaches or anomalies.
+- Carefully vet all external dependencies (libraries, scripts, anonymization tools) for security, privacy, and licensing before use with sensitive information.
+- The included anonymizer script (`anonimizer*.py`) is a demonstration only—**thoroughly review and adapt before use; it does not guarantee compliance or full anonymization.**
 
 ---
 
 ## Features
 
-- **Compartment Management**
-    - List all compartments
-    - Get compartment by name
-- **NoSQL Operations**
-    - List NoSQL tables in compartments
-    - Describe NoSQL tables
-    - Execute SQL queries in compartments
+- Compartment management: List and retrieve compartments.
+- NoSQL operations: List, describe, and query NoSQL tables.
+- Built-in SQL guardrails for safer experimentation.
 
 ---
 
 ## Intended Use
 
-This repository serves as a **proof of concept** for integrating MCP servers with OCI NoSQL.  
-It is intended for local experimentation, technical exploration, and demonstrations only.
-
-**Do not use this with production data or production environments.**
-
----
-
-## ⚠️ Exposing Data to LLMs: Risk and Responsibility
-
-If you use this project in conjunction with large language models (LLMs) or AI assistants—whether public, private, or hosted—be aware of the following:
-
-- **Data Exposure Risk:**  
-  LLMs may utilize (and potentially retain or reveal) the data you provide, including in model outputs, logs, or interactions.  
-  Sensitive data, credentials, personal information, or intellectual property should never be sent to LLMs unless specifically approved.
-
-- **Compliance & Security:**  
-  Exposing regulated, confidential, or production data to LLMs can violate privacy laws (GDPR, CCPA, etc.) or your organization's security policies.  
-  Always verify what data is sent and what controls are in place for retention, auditing, and access.
-
-- **Best Practices for Integrating LLMs:**  
-    - **Minimize Data:**  Send only the minimum necessary context to LLMs.
-    - **Mask/Anonymize:**  Use strict data masking/anonymization prior to submitting data.
-    - **Use Private/Approved LLMs:**  Prefer LLMs deployed in private, organization-controlled environments with proper access controls.
-    - **Audit and Monitor:**  Track LLM queries and responses for potential leaks or inappropriate data use.
-    - **Review Permissions:**  Assign the lowest privileges possible to any LLM data or service account.
-    - **Do Not Connect to Production:**  Never connect LLMs directly to production data sources.
-
-- **Ultimate Responsibility:**  
-  It is the user’s responsibility to ensure no sensitive or unauthorized data is exposed to LLMs as a result of using, adapting, or extending this project.
-
-For guidance, consult your privacy, legal, and security teams before integrating any LLMs or AI-driven tools with your data or systems.
-
-## Security & Compliance Considerations
-
-- **Principle of Least Privilege:**  
-  Grant only the minimal required permissions for the service account.
-- **Avoid Production Data/Environments:**  
-  Never use production or non-sanitized data for testing or demos.
-- **Monitor & Audit Usage:**  
-  Monitor server operations, review logs, and audit for anomalies or unauthorized activities.
-- **Sanitize Outputs:**  
-  When sharing query results or log files, ensure all sensitive information is properly anonymized.  
-  The provided anonymizer scripts (`anonimizer*.py`) are for demonstration only—**review and adapt before use**.
-- **External Dependencies:**  
-  This repository uses open-source and third-party libraries (e.g., MCP, FastMCP, Faker, OCI, Borneo).  
-  **You are responsible** for ensuring third-party tools used are security- and compliance-approved.
-
----
-
-## Open Source, Third-party, and Professional Tools
-
-- **Open-source libraries** such as [Faker](https://faker.readthedocs.io/), [Mimesis](https://mimesis.name/), [anonypy](https://github.com/tolstoyevsky/anonypy) may help with data anonymization, but **must be vetted** for licensing, security, and compliance prior to use with sensitive data.
-- For higher-stakes environments or requirements, choose **professionally supported/enterprise data masking and anonymization solutions** as recommended by your organization.
+This repository is a **proof of concept** for integrating MCP servers with OCI NoSQL.  
+It is intended exclusively for local experimentation, technical exploration, and demonstrations.  
+**Never use with production data or environments.**
 
 ---
 
 ## Prerequisites
 
 - Python 3.x
-- `fastmcp` (installed via `requirements.txt`)
-- OCI Python SDK (`oci`)
-- NoSQL SDK - Borneo
+- [`fastmcp`](https://github.com/ModelContextProtocol/fastmcp/) (via `requirements.txt`)
+- [OCI Python SDK (`oci`)](https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/pythonsdk.htm)
+- [NoSQL SDK (Borneo)](https://docs.oracle.com/en/database/other-databases/nosql-database/25.1/java-driver/index.html)
 - OCI credentials/config file
 
 ---
 
-## Installation
+## Installation & Setup
 
-1. **Clone this repository.**
-2. **Install dependencies:**
-
-    ```bash
+1. **Clone the repository and install dependencies**
+    ```sh
     pip install -r requirements.txt
     ```
 
-3. **Set up your OCI config:**  
-   The default file is `~/.oci/config`. See [OCI SDK documentation](https://docs.oracle.com/en-us/iaas/tools/python/latest/) for details.
+2. **Set up your OCI configuration**
+    - Edit `~/.oci/config` as described in the OCI SDK documentation.
 
 ---
 
@@ -132,7 +95,6 @@ Example JSON entry for Claude UI on Windows:
     }
   }
 }
-```
 
 
 ## Usage
@@ -150,16 +112,10 @@ You can use MCP inspector to explore the API Tools provided
 The [MCP Inspector](https://modelcontextprotocol.io/legacy/tools/inspector)  is an interactive developer tool for testing and debugging MCP servers. 
 
 
-## Security
-
-The server uses OCI's built-in authentication and authorization mechanisms, including:
-- OCI config file-based authentication
-- Signer-based authentication for specific endpoints
 
 ## Example Prompts
 
-Here are example prompts you can use to interact with the MCP server, this test was deployed using Claude Desktop.
-see https://modelcontextprotocol.io/quickstart/user
+You can use prompts such as: 
 
 ```
 "There’s an MCP server named nosqltools"
@@ -169,5 +125,13 @@ see https://modelcontextprotocol.io/quickstart/user
 "Can you provide me those data in JSON format"
 "can you read the data in the table AgentInventoryEntity"
 "What about the data in test_ddb_complex"
-
 ```
+
+This project has been tested with MCP-compatible clients such as Claude Desktop.
+See https://modelcontextprotocol.io/quickstart/user  for more examples.
+
+## Further Guidance 
+* When using anonymization scripts, always manually review outputs for adequacy and compliance.
+* In regulated or sensitive environments, always consult with your legal, privacy, and compliance teams before deploying, adapting, or integrating any LLM- or AI-based workflow with your data or systems.
+* For important business automation or anonymization needs, prefer professionally supported tools rated for enterprise use and compliance.
+     
