@@ -110,93 +110,15 @@ def list_all_compartments() -> str:
     filtered = [{'name': c.name, 'parent_compartment_id': c.compartment_id} for c in compartments]
     return json.dumps(filtered)
 
-@mcp.tool()
-def get_compartment_by_name_tool(name: str) -> str:
-    """Return a compartment matching the provided name"""
-    compartment = get_compartment_by_name(name)
-    if compartment:
-        filtered = {'name': compartment.name, 'parent_compartment_id': compartment.compartment_id}
-        return json.dumps(filtered)
-    else:
-        return str({"error": f"Compartment '{name}' not found."})
-
-@mcp.tool()
-def list_nosql_tables(compartment_name: str) -> str:
-    """List all tables in a given compartment name"""
-    compartment = get_compartment_by_name_v2(compartment_name)
-    if not compartment:
-        return json.dumps({"error": f"Compartment '{compartment_name}' not found. Use list_compartment_names() to see available compartments."})
-    
-    response = nosql_client.list_tables(compartment_id=compartment.id,)
-    tables = response.data  
-    while response.has_next_page:
-        response = nosql_client.list_tables(compartment_id=compartment.id,  page=response.next_page,)
-        tables.extend(response.data)
-    return str(tables)
-
-@mcp.tool()
-def describe_nosql_table(compartment_name: str, table_name: str ) -> str:
-    """describe a NoSQL table in a given compartment name"""
-    compartment = get_compartment_by_name(compartment_name)
-    if not compartment:
-        return json.dumps({"error": f"Compartment '{compartment_name}' not found. Use list_compartment_names() to see available compartments."})
-    
-    nosql_info = nosql_client.get_table(table_name_or_id=table_name, compartment_id=compartment.id).data
-    return str(nosql_info)
-
-"""
-!!! SECURITY/DATA USAGE WARNING !!!
-This function may interact with large language models (LLMs). Review the full disclaimer regarding data exposure risks and best practices above (or in README).
-Never send production, sensitive, or regulated data to LLMs without explicit organizational approval. See your privacy and security team for details.
-"""
-@mcp.tool()
-def execute_query(compartment_name: str, sql_script: str) -> str:
-    """Execute a SQL query in Oracle NoSQL database using standard endpoint.
-    
-    USAGE GUIDELINES:
-    - Always add a comment in the SQL queries : '/* AI Tool: [your-name] - Query */'
-    - Use this for basic queries and standard operations
-    - For complex queries or when experiencing issues, prefer the Borneo endpoint (_borneo variant)
-    - Use alias '$t' for table references in queries
-    - Do not use '$t.*' just '$t' if you want to have all the information or just '*'
-    - for LIKE expresions use regex_like expressions
-    - Oracle NoSQL supports Function on Rows including modification_time and expiration_time (more https://docs.oracle.com/en/database/other-databases/nosql-database/25.1/sqlreferencefornosql/functions-rows.html)
-    - Always CAST timestamp functions to STRING: modification_time(t),expirationtime(t) due to JSON serialization
-    
-    Example:
-    SELECT /*  AI Tool: Claude - Query*/ * FROM users $t    
-    SELECT /*  AI Tool: GPT-4 - Query*/ * FROM users $t    
-    
-    Args:
-        compartment_name: The compartment name to query
-        sql_script: The SQL script to execute
-    """
-    compartment = get_compartment_by_name(compartment_name)
-    if not compartment:
-        return json.dumps({"error": f"Compartment '{compartment_name}' not found. Use list_compartment_names() to see available compartments."})
- 
-    query_details=oci.nosql.models.QueryDetails(
-        compartment_id=compartment.id,
-        statement=sql_script,
-        is_prepared=False,
-    )
-    response = nosql_client.query(query_details)
-    rows = response.data
-    while response.has_next_page:
-        response = nosql_client.query(query_details, page = response.next_page)
-        rows.extend(response.data)
-    
-    return str(rows)
-
 # Using NoSQL SDK Borneo
 
 @mcp.tool()
-def list_nosql_tables_borneo(compartment_name: str) -> str:
+def list_nosql_tables(compartment_name: str) -> str:
     """List all tables in a given compartment using Borneo endpoint.
     
     REMINDER: This uses Borneo endpoint. 
     - It provides only table names. 
-    - Use list_nosql_tables if you want details. Or better ask the details for a specific table using describe_nosql_table_borneo
+    - Ask the details for a specific table using describe_nosql_table
     
     Args:
         compartment_name: The compartment name to list tables from
@@ -207,7 +129,7 @@ def list_nosql_tables_borneo(compartment_name: str) -> str:
 
 
 @mcp.tool()
-def describe_nosql_table_borneo(compartment_name: str, table_name: str ) -> str:
+def describe_nosql_table(compartment_name: str, table_name: str ) -> str:
     """Describe a NoSQL table structure using Borneo endpoint.
     
     NOTE: When querying this table later, use Borneo endpoint and see IMPORTANT INSTRUCTIONS.
@@ -261,7 +183,7 @@ This function may interact with large language models (LLMs). Review the full di
 Never send production, sensitive, or regulated data to LLMs without explicit organizational approval. See your privacy and security team for details.
 """
 @mcp.tool()
-def execute_query_borneo(compartment_name: str, sql_script: str) -> str:
+def execute_query(compartment_name: str, sql_script: str) -> str:
     """execute a SQL query in a given compartment name
        
     IMPORTANT SQL QUERY REQUIREMENTS:
