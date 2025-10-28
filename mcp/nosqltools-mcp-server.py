@@ -189,9 +189,15 @@ def execute_query(compartment_name: str, sql_script: str) -> str:
     IMPORTANT SQL QUERY REQUIREMENTS:
     
     1. QUERY IDENTIFICATION (Required for all queries)
-       - Add this comment at the start: /* AI Tool: [your-name] - Query */
-       - Example: /* AI Tool: Claude - Query */
+       - CRITICAL: Add this comment at the start: /* AI Tool: YOUR_AI_NAME - Query */
+       - Replace YOUR_AI_NAME with your actual AI model name
+       - DO NOT copy "Claude" - use your own name (GPT-4, Gemini, Llama, etc.)
        - Purpose: Tracks which AI tool generated the query for auditing
+       
+       Examples by different AI models:
+       - If you are Claude: /* AI Tool: Claude - Query */
+       - If you are GPT-4: /* AI Tool: GPT-4 - Query */
+       - If you are Gemini: /* AI Tool: Gemini - Query */
     
     2. TABLE REFERENCES (Critical for Oracle NoSQL Borneo syntax)
        - Always use table alias '$t' after the table name
@@ -223,8 +229,13 @@ def execute_query(compartment_name: str, sql_script: str) -> str:
        - Note: Always use $t as the parameter for row functions
        - Reason: Prevents JSON serialization errors in results
        - Documentation: https://docs.oracle.com/en/database/other-databases/nosql-database/25.1/sqlreferencefornosql/functions-rows.html
-    
-    7. HIERARCHICAL TABLES (Parent-Child Relationships)
+ 
+    7. USAGE REPORTING
+       - Query results include: {"usage": {"read_units_consumed": X, "write_units_consumed": Y}}
+       - Always inform users: "Query used X RU, Y WU"
+       - Helps track query cost and performance
+ 
+    8. HIERARCHICAL TABLES (Parent-Child Relationships)
        
        Child tables use dot notation: ParentTable.childname (e.g., Movie.child)
        Two methods available for querying hierarchies:
